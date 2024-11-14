@@ -10,10 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "axios": "^1.7.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"
+=======
+    "@reduxjs/toolkit": "^2.3.0",
+    "axios": "^1.7.7",
+    "history": "^5.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.1.2",
+    "redux": "^5.0.1",
+    "redux-observable": "^3.0.0-rc.2",
+    "rxjs": "^7.8.1"
+>>>>>>> a2de8dcf24da8a6695cb4d15c08c68c60a8f27d2
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
