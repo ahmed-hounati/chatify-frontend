@@ -1,28 +1,20 @@
+// src/components/Logout.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../services/authService';
+import { logout } from '../services/AuthService';
 
-const LogoutButton: React.FC = () => {
-    const navigate = useNavigate();
+const Logout: React.FC<{ token: string; clearToken: () => void }> = ({ token, clearToken }) => {
+  const handleLogout = async () => {
+    try {
+      await logout(token);
+      clearToken();
+      alert('Logged out successfully');
+    } catch (error) {
+      console.error(error);
+      alert('Logout failed');
+    }
+  };
 
-    const handleLogout = async () => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                await logoutUser(token);
-                localStorage.removeItem('authToken');
-                navigate('/login');
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        }
-    };
-
-    return (
-        <button onClick={handleLogout}>
-            Logout
-        </button>
-    );
+  return <button onClick={handleLogout}>Logout</button>;
 };
 
-export default LogoutButton;
+export default Logout;
