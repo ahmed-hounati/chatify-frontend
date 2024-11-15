@@ -1,165 +1,65 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { registerUser } from '../../services/AuthServices';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 
-interface FormData {
-    nom: string;
-    prenom: string;
-    email: string;
-    password: string;
-    numero_telephone: string;
-    adresse: string;
-    birthday: Date | null;
-    profilePic: File | null;
-}
+import React, { useState } from 'react';
+import { register } from '../services/AuthService';
 
-const RegisterForm: React.FC = () => {
-    const [formData, setFormData] = useState<FormData>({
-        nom: '',
-        prenom: '',
-        email: '',
-        password: '',
-        numero_telephone: '',
-        adresse: '',
-        birthday: null,
-        profilePic: null,
-    });
-    const [error, setError] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const navigate = useNavigate();
+const Register: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { name, value, files } = e.target;
-        setFormData(prevData => ({
-            ...prevData,
-            [name]: files ? files[0] : value
-        }));
-    };
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await register(email, password);
+      alert('Registration successful');
+    } catch (error) {
+      console.error(error);
+      alert('Registration failed');
+    }
+  };
 
-    const handleDateChange = (date: Date | null) => {
-        setFormData(prevData => ({
-            ...prevData,
-            birthday: date
-        }));
-    };
-
-    const validateForm = (): boolean => {
-        const requiredFields = ['nom', 'prenom', 'email', 'password', 'numero_telephone', 'adresse', 'birthday'];
-        if (requiredFields.some(field => !(formData as any)[field])) {
-            setError('Please fill in all fields');
-            return false;
-        }
-        if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            setError('Please enter a valid email address');
-            return false;
-        }
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters long');
-            return false;
-        }
-        return true;
-    };
-
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError('');
-
-        if (!validateForm()) return;
-
-        setIsLoading(true);
-
-        const userData = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-            if (key === 'birthday' && value instanceof Date) {
-                userData.append(key, value.toISOString());
-            } else if (value !== null) {
-                userData.append(key, value as string | Blob);
-            }
-        });
-
-        try {
-            await registerUser(userData);
-            navigate('/login');
-        } catch (err: any) {
-            if (err.response && err.response.data) {
-                setError(err.response.data.message || 'An error occurred during registration');
-            } else {
-                setError('An unexpected error occurred. Please try again.');
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="flex items-center justify-center h-screen bg-cover bg-center" style={{ backgroundImage: "url('/images/background.jpg')" }}>
-            <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-xl">
-                <h1 className="text-red-700 text-4xl font-bold text-center mb-6">Register</h1>
-                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {['nom', 'prenom', 'email', 'password', 'numero_telephone', 'adresse'].map((field) => (
-                        <div key={field}>
-                            <label htmlFor={field} className="block mb-1 font-semibold text-red-700 capitalize">
-                                {field === 'numero_telephone' ? 'Phone Number' : field}
-                            </label>
-                            <input
-                                id={field}
-                                name={field}
-                                type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                                placeholder={`Enter your ${field === 'numero_telephone' ? 'phone number' : field}`}
-                                value={(formData as any)[field]}
-                                onChange={handleChange}
-                                className="p-2 w-full border rounded text-black focus:outline-none focus:ring-2 focus:ring-red-700"
-                                required
-                            />
-                        </div>
-                    ))}
-                    <div>
-                        <label htmlFor="birthday" className="block mb-1 font-semibold text-red-700 capitalize">Birthday</label>
-                        <div className="p-2 w-full border rounded text-black focus:outline-none focus:ring-2 focus:ring-red-700">
-                            <DatePicker
-                                selected={formData.birthday}
-                                onChange={handleDateChange}
-                                dateFormat="yyyy-MM-dd"
-                                maxDate={new Date()}
-                                showYearDropdown
-                                scrollableYearDropdown
-                                yearDropdownItemNumber={100}
-                                placeholderText="Select your birthday"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label htmlFor="profilePic" className="block mb-1 font-semibold text-red-700 capitalize">
-                            Profile Picture
-                        </label>
-                        <input
-                            id="profilePic"
-                            name="profilePic"
-                            type="file"
-                            onChange={handleChange}
-                            accept="image/*"
-                            className="p-2 w-full border rounded text-black focus:outline-none focus:ring-2 focus:ring-red-700"
-                            required
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="w-full bg-red-800 text-white p-2 rounded hover:bg-black transition duration-200"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Registering...' : 'Register'}
-                    </button>
-                </form>
-                <p className="mt-4 text-black text-center">
-                    Already have an account? <Link to="/login" className="text-red-800 font-semibold hover:underline">Login here</Link>
-                </p>
-            </div>
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-green-200">
+      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-green-700">Join Chatify!</h1>
+          <p className="text-gray-600">Create an account and start connecting!</p>
         </div>
-    );
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label className="block text-left text-gray-600 font-semibold">Email:</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md placeholder-gray-500"
+              placeholder="placeholder..."
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-left text-gray-600 font-semibold">Password:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md placeholder-gray-500"
+              placeholder="placeholder..."
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition"
+          >
+            Register
+          </button>
+        </form>
+        <p className="text-center mt-4 text-sm text-gray-600">
+          Already have an account? <a href="/login" className="text-green-500 hover:underline">Log in</a>!
+        </p>
+      </div>
+    </div>
+  );
 };
 
-export default RegisterForm;
+export default Register;
